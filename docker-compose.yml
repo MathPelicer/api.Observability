@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: ./src/api.Observability/Dockerfile
+    ports:
+      - 8080:8080
+      - 8081:8081
+    networks:
+      - localprom
+    
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+    command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
+    networks:
+      - localprom
+    ports:
+      - 9000:9090
+    depends_on:
+      - api
+      
+  grafana:
+    image: grafana/grafana-enterprise
+    ports:
+      - "3001:3000"   
+    depends_on:
+      - prometheus
+    networks:
+      - localprom
+
+
+networks:
+  localprom:
+    driver: bridge
